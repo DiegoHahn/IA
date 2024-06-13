@@ -1,10 +1,10 @@
 import pandas as pd
 
-def carregar_dados(caminho_arquivo):
+def carregar_dados(data_path):
     """
     Carrega os dados do arquivo CSV.
     """
-    return pd.read_csv(caminho_arquivo)
+    return pd.read_csv(data_path)
 
 def agregar_dados(data):
     """
@@ -16,7 +16,7 @@ def transformar_dados(data):
     """
     Transforma os dados longos para largos e preenche valores ausentes.
     """
-    # mapeamento de IDs para nomes de colunas
+    # Exemplo de um mapeamento de IDs para nomes de colunas
     id_to_name = {
         70: 'Vazão m3/h',
         71: 'SP_Velocidade',
@@ -33,7 +33,7 @@ def transformar_dados(data):
         85: 'feed_tensão_BA04',
         86: 'BA01_status',
         87: 'BA03_status',
-        88: 'BA04_status',
+        88: 'BA04_status'
     }
 
     # Transformar dados longos para largos
@@ -45,10 +45,20 @@ def transformar_dados(data):
     # Preencher valores ausentes com o último valor válido
     data_pivot.ffill(inplace=True)
 
+    # Excluir linhas que possuem qualquer valor NaN
+    data_pivot.dropna(inplace=True)
+
     return data_pivot
+
+def salvar_dados(data, output_path):
+    """
+    Salva os dados transformados em um arquivo CSV com encoding UTF-8 e delimitador de vírgula.
+    """
+    data.to_csv(output_path, index=False, encoding='utf-8', sep=',')
 
 def main():
     data_path = 'C:/Users/Diego/OneDrive/Documentos/Programacao/Satc/IA/arquivoMotorIA.csv'
+    output_path = 'C:/Users/Diego/OneDrive/Documentos/Programacao/Satc/IA/data_pivot.csv'
 
     # Carregar os dados
     data = carregar_dados(data_path)
@@ -59,14 +69,11 @@ def main():
     # Transformar os dados
     data_pivot = transformar_dados(data_aggregated)
 
-    # Excluir linhas que possuem qualquer valor NaN SOLUÇÂO PRECISA ESTAR AQUI NESSE FLUXO
-    data_pivot.dropna(inplace=True)
+    # Salvar os dados transformados em um arquivo CSV
+    salvar_dados(data_pivot, output_path)
 
-    # Exibir as primeiras valores NaN estão presentes ver como fazer essa parte
+    # Exibir as primeiras linhas para confirmar a transformação
     print(data_pivot.head())
-
-    # Exibir as Últimas linhas para confirmar a transformação
-    print(data_pivot.tail())
 
 if __name__ == '__main__':
     main()
