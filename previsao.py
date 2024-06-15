@@ -13,7 +13,7 @@ def pre_processar_dados(data):
     Normaliza os dados e separa as características (features) do alvo (target).
     """
     # Remover a coluna de timestamp, pois não será usada no treinamento
-    features = data.drop(columns=['pk_TimeStamp'])
+    features = data.drop(columns=['Timestamp'])
 
     # Normalizar os dados
     scaler = StandardScaler()
@@ -21,7 +21,7 @@ def pre_processar_dados(data):
 
     return features_scaled, scaler
 
-def treinar_modelo(features_scaled, contamination=0.1, n_estimators=100, max_samples='auto', max_features=1.0, bootstrap=False):
+def treinar_modelo(features_scaled, contamination=0.001, n_estimators=100, max_samples='auto', max_features=1.0, bootstrap=False):
     """
     Treina o modelo Isolation Forest nos dados fornecidos.
     """
@@ -51,8 +51,8 @@ def salvar_resultados(data, predicoes, output_path):
     data.to_csv(output_path, index=False, encoding='utf-8', sep=',')
 
 def main():
-    data_path = 'C:/Users/Diego/OneDrive/Documentos/Programacao/Satc/IA/data_pivot.csv'
-    output_path = 'C:/Users/Diego/OneDrive/Documentos/Programacao/Satc/IA/data_pivot_with_anomalies.csv'
+    data_path = 'C:/Users/Diego/Documents/Programacao/Satc/5fase/IA/IA/arquivoMotorIA.csv'
+    output_path = 'C:/Users/Diego/Documents/Programacao/Satc/5fase/IA/IA/data_pivot_with_anomalies.csv'
 
     # Carregar os dados
     data = carregar_dados(data_path)
