@@ -1,40 +1,26 @@
 import pandas as pd
-from sklearn.ensemble import IsolationForest
-from sklearn.preprocessing import StandardScaler
+import joblib
+from sqlalchemy import create_engine, text
 
-def carregar_dados(data_path):
+def carregar_dados_do_banco(engine, query):
     """
-    Carrega os dados do arquivo CSV.
+    Carrega os dados do banco de dados PostgreSQL usando uma consulta SQL.
     """
-    return pd.read_csv(data_path)
+    with engine.connect() as connection:
+        data = pd.read_sql_query(query, connection)
+    return data
 
-def pre_processar_dados(data):
+def pre_processar_dados(data, scaler, feature_columns):
     """
-    Normaliza os dados e separa as características (features) do alvo (target).
+    Normaliza os dados usando o scaler fornecido.
     """
-    # Remover a coluna de timestamp, pois não será usada no treinamento
-    features = data.drop(columns=['Timestamp'])
+    # Selecionar apenas as colunas necessárias para previsão
+    features = data[feature_columns]
 
-    # Normalizar os dados
-    scaler = StandardScaler()
-    features_scaled = scaler.fit_transform(features)
+    # Normalizar os dados com o scaler fornecido
+    features_scaled = scaler.transform(features)
 
-    return features_scaled, scaler
-
-def treinar_modelo(features_scaled, contamination=0.001, n_estimators=100, max_samples='auto', max_features=1.0, bootstrap=False):
-    """
-    Treina o modelo Isolation Forest nos dados fornecidos.
-    """
-    model = IsolationForest(
-        contamination=contamination,
-        n_estimators=n_estimators,
-        max_samples=max_samples,
-        max_features=max_features,
-        bootstrap=bootstrap,
-        random_state=42
-    )
-    model.fit(features_scaled)
-    return model
+    return features_scaled
 
 def fazer_predicoes(model, features_scaled):
     """
@@ -42,35 +28,56 @@ def fazer_predicoes(model, features_scaled):
     """
     return model.predict(features_scaled)
 
+def inserir_resultados(engine, data, predicoes):
+    """
+    Insere os resultados de volta na tabela do banco de dados.
+    """
+    with engine.begin() as connection:
+        for i, pred in enumerate(predicoes):
+            result = connection.execute(text("""
+                UPDATE sua_tabela
+                SET anomalia = :anomalia
+                WHERE "ID Log" = :id_log;
+            """), {'anomalia': int(pred), 'id_log': int(data['ID Log'].iloc[i])})
+
+# cria um arquivo CSV para com os dados e as previsões de anomalias (PODE REMOVER DEPOIS)
 def salvar_resultados(data, predicoes, output_path):
     """
     Salva os dados com as previsões de anomalias em um arquivo CSV.
     """
     # Adicionar a coluna de anomalias aos dados originais
-    data['anomaly'] = predicoes
+    data['anomalia'] = predicoes
     data.to_csv(output_path, index=False, encoding='utf-8', sep=',')
 
 def main():
-    data_path = 'C:/Users/Diego/Documents/Programacao/Satc/5fase/IA/IA/arquivoMotorIA.csv'
-    output_path = 'C:/Users/Diego/Documents/Programacao/Satc/5fase/IA/IA/data_pivot_with_anomalies.csv'
+    # Configurações de conexão (PRECISA ARRUMAR OS DADOS DA CONEXÃO COM O BANCO) esse outh_path é o local onde será salvo o arquivo CSV (se não for mais necessário, pode remover)
+    engine = create_engine('postgresql+psycopg2://USUARIO:SENHA@localhost:5432/NOMEDOBANCO')
+    output_path = 'C:/Users/Diego/OneDrive/Documentos/Programacao/Satc/IA/previsao_anomalias.csv'
+    
+    # Query para selecionar os dados (TALVEZ ADICIONAR UM INDICE NO BANCO PARA MELHORAR A PERFORMANCE)
+    query = "SELECT * FROM sua_tabela WHERE anomalia IS NULL;"
 
-    # Carregar os dados
-    data = carregar_dados(data_path)
+    # Carregar os dados do banco de dados
+    data = carregar_dados_do_banco(engine, query)
+
+    # Carregar o modelo treinado e o scaler
+    model = joblib.load('C:/Users/Diego/OneDrive/Documentos/Programacao/Satc/IA/isolation_forest_model.pkl')
+    scaler = joblib.load('C:/Users/Diego/OneDrive/Documentos/Programacao/Satc/IA/scaler.pkl')
+
+    # Definir os nomes das colunas usadas para o treinamento do modelo
+    feature_columns = ['ID Motor', 'Status', 'SP Frequencia', 'Feed Corrente', 'Feed Tensão Entrada']
 
     # Pré-processar os dados
-    features_scaled, scaler = pre_processar_dados(data)
-
-    # Treinar o modelo com parâmetros ajustáveis
-    model = treinar_modelo(features_scaled, contamination=0.05, n_estimators=200, max_samples=256, max_features=1.0, bootstrap=False)
+    features_scaled = pre_processar_dados(data, scaler, feature_columns)
 
     # Fazer previsões de anomalias
     predicoes = fazer_predicoes(model, features_scaled)
 
-    # Salvar os resultados
+    # Inserir os resultados de volta na tabela do banco de dados
+    inserir_resultados(engine, data, predicoes)
+    
+    # Salvar os resultados em um arquivo CSV para testar (PODE REMOVER DEPOIS)
     salvar_resultados(data, predicoes, output_path)
-
-    # Exibir as primeiras linhas para confirmar a transformação
-    print(data.head())
 
 if __name__ == '__main__':
     main()
