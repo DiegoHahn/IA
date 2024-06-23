@@ -26,7 +26,10 @@ def fazer_predicoes(model, features_scaled):
     """
     Faz previsões de anomalias com o modelo treinado.
     """
-    return model.predict(features_scaled)
+    predicoes = model.predict(features_scaled)
+    # Converter -1 para 1 (anomalia) e 1 para 0 (normal)
+    predicoes = [1 if p == -1 else 0 for p in predicoes]
+    return predicoes
 
 def inserir_resultados(engine, data, predicoes):
     """
@@ -39,6 +42,8 @@ def inserir_resultados(engine, data, predicoes):
                 SET anomalia = :anomalia
                 WHERE "ID Log" = :id_log;
             """), {'anomalia': int(pred), 'id_log': int(data['ID Log'].iloc[i])})
+            # Log para verificar se a atualização foi realizada
+            print(f"Atualização {i + 1}/{len(predicoes)}: Linhas afetadas = {result.rowcount}")
 
 # cria um arquivo CSV para com os dados e as previsões de anomalias (PODE REMOVER DEPOIS)
 def salvar_resultados(data, predicoes, output_path):
@@ -50,11 +55,11 @@ def salvar_resultados(data, predicoes, output_path):
     data.to_csv(output_path, index=False, encoding='utf-8', sep=',')
 
 def main():
-    # Configurações de conexão (PRECISA ARRUMAR OS DADOS DA CONEXÃO COM O BANCO) esse outh_path é o local onde será salvo o arquivo CSV (se não for mais necessário, pode remover)
-    engine = create_engine('postgresql+psycopg2://USUARIO:SENHA@localhost:5432/NOMEDOBANCO')
-    output_path = 'C:/Users/Diego/OneDrive/Documentos/Programacao/Satc/IA/previsao_anomalias.csv'
+   # Configurações de conexão (PRECISA ARRUMAR OS DADOS DA CONEXÃO COM O BANCO) esse outh_path é o local onde será salvo o arquivo CSV (se não for mais necessário, pode remover)
+    engine = create_engine('postgresql+psycopg2://postgres:fracaohah1@localhost:5432/testeIA')
+    # output_path = 'C:/Users/Diego/OneDrive/Documentos/Programacao/Satc/IA/previsao_anomalias.csv'
     
-    # Query para selecionar os dados (TALVEZ ADICIONAR UM INDICE NO BANCO PARA MELHORAR A PERFORMANCE)
+    # Query para selecionar os dados que ainda não têm previsão
     query = "SELECT * FROM sua_tabela WHERE anomalia IS NULL;"
 
     # Carregar os dados do banco de dados
@@ -77,7 +82,7 @@ def main():
     inserir_resultados(engine, data, predicoes)
     
     # Salvar os resultados em um arquivo CSV para testar (PODE REMOVER DEPOIS)
-    salvar_resultados(data, predicoes, output_path)
+    # salvar_resultados(data, predicoes, output_path)
 
 if __name__ == '__main__':
     main()

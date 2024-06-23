@@ -22,7 +22,7 @@ def pre_processar_dados(data):
 
     return features_scaled, scaler
 
-def treinar_modelo(features_scaled, contamination=0.01, n_estimators=100, max_samples='auto', max_features=1.0, bootstrap=False):
+def treinar_modelo(features_scaled, contamination, n_estimators, max_samples, max_features, bootstrap):
     """
     Treina o modelo Isolation Forest nos dados fornecidos.
     """
@@ -49,7 +49,7 @@ def main():
     features_scaled, scaler = pre_processar_dados(data)
 
     # Treinar o modelo com parâmetros ajustáveis
-    model = treinar_modelo(features_scaled, contamination=0.05, n_estimators=200, max_samples=256, max_features=1.0, bootstrap=False)
+    model = treinar_modelo(features_scaled, contamination=0.1, n_estimators=200, max_samples=256, max_features=1.0, bootstrap=False)
 
     # Salvar o modelo treinado e o scaler
     joblib.dump(model, model_path)
