@@ -38,7 +38,7 @@ def inserir_resultados(engine, data, predicoes):
     with engine.begin() as connection:
         for i, pred in enumerate(predicoes):
             result = connection.execute(text("""
-                UPDATE sua_tabela
+                UPDATE log_motor
                 SET anomalia = :anomalia
                 WHERE "ID Log" = :id_log;
             """), {'anomalia': int(pred), 'id_log': int(data['ID Log'].iloc[i])})
@@ -59,8 +59,8 @@ def main():
     engine = create_engine('postgresql+psycopg2://postgres:fracaohah1@localhost:5432/testeIA')
     # output_path = 'C:/Users/Diego/OneDrive/Documentos/Programacao/Satc/IA/previsao_anomalias.csv'
     
-    # Query para selecionar os dados que ainda não têm previsão
-    query = "SELECT * FROM sua_tabela WHERE anomalia IS NULL;"
+    # Query para selecionar os dados (TALVEZ ADICIONAR UM INDICE NO BANCO PARA MELHORAR A PERFORMANCE)
+    query = "SELECT * FROM log_motor WHERE anomalia IS NULL;"
 
     # Carregar os dados do banco de dados
     data = carregar_dados_do_banco(engine, query)
