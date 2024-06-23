@@ -56,7 +56,7 @@ def salvar_resultados(data, predicoes, output_path):
 
 def main():
    # Configurações de conexão (PRECISA ARRUMAR OS DADOS DA CONEXÃO COM O BANCO) esse outh_path é o local onde será salvo o arquivo CSV (se não for mais necessário, pode remover)
-    engine = create_engine('postgresql+psycopg2://postgres:fracaohah1@localhost:5432/testeIA')
+    engine = create_engine('postgresql+psycopg2://USER:SENHA@localhost:5432/NOMEDOBANCO')
     # output_path = 'C:/Users/Diego/OneDrive/Documentos/Programacao/Satc/IA/previsao_anomalias.csv'
     
     # Query para selecionar os dados (TALVEZ ADICIONAR UM INDICE NO BANCO PARA MELHORAR A PERFORMANCE)
