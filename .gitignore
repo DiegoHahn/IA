@@ -1,0 +1,21 @@
+# Modelos treinados (pickle) e artefatos gerados
+*.pkl
+*.joblib
+models/
+previsao_anomalias.csv
+previsoes*.csv
+
+# Dados locais de treino (veja o README para obter o CSV)
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Variáveis de ambiente
+.env
